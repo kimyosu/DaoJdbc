@@ -9,15 +9,18 @@ public class Seller implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
     private Integer id;
-    private String nme;
+    private String name;
     private String email;
     private LocalDate birthdate;
     private Double basesalary;
     private Department department;
+    
+    public Seller(){
+    }
 
     public Seller(Integer id, String nme, String email, LocalDate birthdate, Double basesalary, Department department) {
         this.id = id;
-        this.nme = nme;
+        this.name = nme;
         this.email = email;
         this.birthdate = birthdate;
         this.basesalary = basesalary;
@@ -32,12 +35,12 @@ public class Seller implements Serializable {
         this.id = id;
     }
 
-    public String getNme() {
-        return nme;
+    public String getName() {
+        return name;
     }
 
-    public void setNme(String nme) {
-        this.nme = nme;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getEmail() {
@@ -81,5 +84,17 @@ public class Seller implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hashCode(id);
+    }
+
+    @Override
+    public String toString() {
+        return "Seller{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", birthdate=" + birthdate +
+                ", basesalary=" + basesalary +
+                ", department=" + department +
+                '}';
     }
 }
