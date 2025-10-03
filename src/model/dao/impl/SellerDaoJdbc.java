@@ -1,11 +1,28 @@
 package model.dao.impl;
 
+import db.DB;
+import db.DbException;
 import model.dao.SellerDao;
+import model.entities.Department;
 import model.entities.Seller;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 public class SellerDaoJdbc implements SellerDao {
+    private Connection connection;
+
+    public SellerDaoJdbc() {
+    }
+
+    public SellerDaoJdbc(Connection connection) {
+        this.connection = connection;
+    }
+
+
     @Override
     public void insert(Seller obj) {
 
@@ -23,7 +40,64 @@ public class SellerDaoJdbc implements SellerDao {
 
     @Override
     public Seller findById(Integer id) {
-        return null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            preparedStatement = connection.prepareStatement( //criando o preparedStatement(
+                    // responsavel por executar o comando SQL)
+                    "select seller.*,department.Name as DepName " +
+                            "from seller inner join department " +
+                            "on seller.DepartmentId = department.id " +
+                            "where seller.Id = ?"
+            );/* Explicando o codigo: Seleciona todos os campos da tabela seller e o campo Name da tabela
+             department, renomeando-o para DepName. Faz um inner join entre as tabelas seller e department
+             com base na correspondência entre seller.DepartmentId e department.id. Filtra os resultados para
+             incluir apenas o registro onde seller.Id corresponde ao valor fornecido (representado por ?).
+             */
+
+            preparedStatement.setInt(1, id); //Setando o valor do parametro ? com o id recebido no metodo
+            resultSet = preparedStatement.executeQuery(); //Executando o comando SQL
+            //e armazenando o resultado no resultSet
+            if (resultSet.next()) {
+                Department department = new Department();
+                department.setId(resultSet.getInt("DepartmentId"));
+                department.setName(resultSet.getString("DepName"));
+                Seller seller = new Seller();
+                seller.setId(resultSet.getInt("Id"));
+                seller.setName(resultSet.getString("Name"));
+                seller.setEmail(resultSet.getString("Email"));
+                seller.setBasesalary(resultSet.getDouble("BaseSalary"));
+                seller.setBirthdate(resultSet.getDate("BirthDate").toLocalDate());
+                seller.setDepartment(department);
+                return seller;
+                /*
+                Explicando o código acima:
+                1. Verifica se há um próximo registro no ResultSet usando resultSet.next().
+                2. Cria uma nova instância de Department.
+                3. Define o ID do departamento usando o valor da coluna "DepartmentId" do ResultSet.
+                4. Define o nome do departamento usando o valor da coluna "DepName" do ResultSet.
+                5. Cria uma nova instância de Seller.
+                6. Define o ID do vendedor usando o valor da coluna "Id" do ResultSet.
+                7. Define o nome do vendedor usando o valor da coluna "Name" do ResultSet.
+                8. Define o email do vendedor usando o valor da coluna "Email" do ResultSet.
+                9. Define o salário base do vendedor usando o valor da coluna "BaseSalary" do ResultSet.
+                10. Define a data de nascimento do vendedor convertendo o valor da coluna
+                    "BirthDate" do ResultSet para LocalDate.
+                11. Associa o departamento criado anteriormente ao vendedor.
+                12. Retorna o objeto Seller populado.
+
+                 */
+            }
+            return null;
+
+        } catch (SQLException e) {
+            throw new DbException(e.getMessage());
+        }finally {
+            DB.closeConnection();
+            DB.closeStatement(preparedStatement);
+            DB.closeResultSet(resultSet);
+
+        }
     }
 
     @Override
