@@ -12,13 +12,14 @@ import java.util.Properties;
 public class DB {
 
 	private static Connection conn = null;
-	
+
+    //Iniicia uma conexao com o banco de dados
 	public static Connection getConnection() {
 		if (conn == null) {
 			try {
-				Properties props = loadProperties();
-				String url = props.getProperty("dburl");
-				conn = DriverManager.getConnection(url, props);
+				Properties props = loadProperties(); //Carrega o arquivo de propriedades
+				String url = props.getProperty("dburl"); //Pega a URL do banco de dados
+				conn = DriverManager.getConnection(url, props); //Cria a conexao com o banco de dados usando a URL e as propriedades
 			}
 			catch (SQLException e) {
 				throw new DbException(e.getMessage());
@@ -27,7 +28,7 @@ public class DB {
 		return conn;
 	}
 	
-	public static void closeConnection() {
+	public static void closeConnection() { //Fecha a conexao com o banco de dados
 		if (conn != null) {
 			try {
 				conn.close();
@@ -38,9 +39,9 @@ public class DB {
 	}
 	
 	private static Properties loadProperties() {
-		try (FileInputStream fs = new FileInputStream("db.properties")) {
+		try (FileInputStream fs = new FileInputStream("db.properties")) { //Tenta ler o arquivo de propriedades
 			Properties props = new Properties();
-			props.load(fs);
+			props.load(fs); //Carrega as propriedades do arquivo
 			return props;
 		}
 		catch (IOException e) {
@@ -51,7 +52,7 @@ public class DB {
 	public static void closeStatement(Statement st) {
 		if (st != null) {
 			try {
-				st.close();
+				st.close(); //Fecha o Statement
 			} catch (SQLException e) {
 				throw new DbException(e.getMessage());
 			}
@@ -61,7 +62,7 @@ public class DB {
 	public static void closeResultSet(ResultSet rs) {
 		if (rs != null) {
 			try {
-				rs.close();
+				rs.close(); //Fecha o ResultSet
 			} catch (SQLException e) {
 				throw new DbException(e.getMessage());
 			}
