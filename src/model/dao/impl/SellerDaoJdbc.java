@@ -45,11 +45,7 @@ public class SellerDaoJdbc implements SellerDao {
         try {
             preparedStatement = connection.prepareStatement( //criando o preparedStatement(
                     // responsavel por executar o comando SQL)
-                    "select seller.*,department.Name as DepName " +
-                            "from seller inner join department " +
-                            "on seller.DepartmentId = department.id " +
-                            "where seller.Id = ?"
-            );/* Explicando o codigo: Seleciona todos os campos da tabela seller e o campo Name da tabela
+                    "select seller.*,department.Name as DepName " + "from seller inner join department " + "on seller.DepartmentId = department.id " + "where seller.Id = ?");/* Explicando o codigo: Seleciona todos os campos da tabela seller e o campo Name da tabela
              department, renomeando-o para DepName. Faz um inner join entre as tabelas seller e department
              com base na correspondência entre seller.DepartmentId e department.id. Filtra os resultados para
              incluir apenas o registro onde seller.Id corresponde ao valor fornecido (representado por ?).
@@ -58,19 +54,35 @@ public class SellerDaoJdbc implements SellerDao {
             preparedStatement.setInt(1, id); //Setando o valor do parametro ? com o id recebido no metodo
             resultSet = preparedStatement.executeQuery(); //Executando o comando SQL
             //e armazenando o resultado no resultSet
-            if (resultSet.next()) {
-                Department department = new Department();
-                department.setId(resultSet.getInt("DepartmentId"));
-                department.setName(resultSet.getString("DepName"));
-                Seller seller = new Seller();
-                seller.setId(resultSet.getInt("Id"));
-                seller.setName(resultSet.getString("Name"));
-                seller.setEmail(resultSet.getString("Email"));
-                seller.setBasesalary(resultSet.getDouble("BaseSalary"));
-                seller.setBirthdate(resultSet.getDate("BirthDate").toLocalDate());
-                seller.setDepartment(department);
+            if (resultSet.next()) { //acessando o primeiro registro do resultSet
+                //caso haja um registro no resultSet (ou seja, se o id existir no banco de dados)
+                Department department = instantiateDepartment(resultSet);
+                Seller seller = instantiateSeller(resultSet, department);
                 return seller;
-                /*
+
+            }
+            return null;
+
+        } catch (SQLException e) {
+            throw new DbException(e.getMessage());
+        } finally {
+            DB.closeConnection();
+            DB.closeStatement(preparedStatement);
+            DB.closeResultSet(resultSet);
+
+        }
+    }
+
+    private Seller instantiateSeller(ResultSet resultSet, Department department) throws SQLException {
+        Seller seller = new Seller();
+        seller.setId(resultSet.getInt("Id"));
+        seller.setName(resultSet.getString("Name"));
+        seller.setEmail(resultSet.getString("Email"));
+        seller.setBasesalary(resultSet.getDouble("BaseSalary"));
+        seller.setBirthdate(resultSet.getDate("BirthDate").toLocalDate());
+        seller.setDepartment(department);
+        return seller;
+        /*
                 Explicando o código acima:
                 1. Verifica se há um próximo registro no ResultSet usando resultSet.next().
                 2. Cria uma nova instância de Department.
@@ -87,17 +99,13 @@ public class SellerDaoJdbc implements SellerDao {
                 12. Retorna o objeto Seller populado.
 
                  */
-            }
-            return null;
+    }
 
-        } catch (SQLException e) {
-            throw new DbException(e.getMessage());
-        }finally {
-            DB.closeConnection();
-            DB.closeStatement(preparedStatement);
-            DB.closeResultSet(resultSet);
-
-        }
+    private Department instantiateDepartment(ResultSet resultSet) throws SQLException {
+        Department department = new Department();
+        department.setId(resultSet.getInt("Id"));
+        department.setName(resultSet.getString("DepName"));
+        return department;
     }
 
     @Override
