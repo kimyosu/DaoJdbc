@@ -43,23 +43,48 @@ public class SellerDaoJdbc implements SellerDao {
             preparedStatement.setInt(5, obj.getDepartment().getId());
 
             int n = preparedStatement.executeUpdate(); // executa o comando SQL
-            if (n > 0 ){
-                resultSet =  preparedStatement.getGeneratedKeys(); // pegando o id gerado automaticamente
-                 if (resultSet.next()){ // se houver um id gerado
+            if (n > 0) {
+                resultSet = preparedStatement.getGeneratedKeys(); // pegando o id gerado automaticamente
+                if (resultSet.next()) { // se houver um id gerado
                     int id = resultSet.getInt(1); // pegando o id gerado
                     obj.setId(id); // setando o id no obj
-                     return; // saindo do metodo
+                    return; // saindo do metodo
                 }
-             }
+                DB.closeStatement(preparedStatement);
+            }
             throw new DbException("Unexpected error! No rows affected!");
-        }catch (SQLException e){
+        } catch (SQLException e) {
             throw new DbException(e.getMessage());
+        }finally {
+            DB.closeStatement(preparedStatement);
         }
     }
 
     @Override
     public void update(Seller obj) {
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            preparedStatement = connection.prepareStatement(
+                    "update seller " +
+                            "set Name = ?, Email = ?, BirthDate = ?, BaseSalary = ?, DepartmentId = ? " +
+                            "where id = ?", // ? são os parametros que serao substituidos pelos valores do obj
+                    PreparedStatement.RETURN_GENERATED_KEYS // para retornar o id gerado automaticamente
+            );
+            preparedStatement.setString(1, obj.getName());
+            preparedStatement.setString(2, obj.getEmail());
+            preparedStatement.setDate(3, Date.valueOf(obj.getBirthdate()));
+            preparedStatement.setDouble(4, 2000.00);
+            preparedStatement.setInt(5, obj.getDepartment().getId());
+            preparedStatement.setInt(6, obj.getId());
 
+            int n = preparedStatement.executeUpdate(); // executa o comando SQL
+
+        } catch (SQLException e) {
+            throw new DbException(e.getMessage());
+        }finally {
+            DB.closeStatement(preparedStatement);
+        }
     }
 
     @Override
