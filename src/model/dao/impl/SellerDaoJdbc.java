@@ -7,6 +7,7 @@ import model.entities.Department;
 import model.entities.Seller;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,9 +19,6 @@ import java.util.Map;
 public class SellerDaoJdbc implements SellerDao {
     private Connection connection;
 
-    public SellerDaoJdbc() {
-    }
-
     public SellerDaoJdbc(Connection connection) {
         this.connection = connection;
     }
@@ -28,7 +26,35 @@ public class SellerDaoJdbc implements SellerDao {
 
     @Override
     public void insert(Seller obj) {
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            preparedStatement = connection.prepareStatement(
+                    "INSERT INTO seller " +
+                            "(Name, Email, BirthDate, BaseSalary, DepartmentId) " +
+                            "VALUES " +
+                            "(?, ?, ?, ?, ?)", // ? são os parametros que serao substituidos pelos valores do obj
+                    PreparedStatement.RETURN_GENERATED_KEYS // para retornar o id gerado automaticamente
+            );
+            preparedStatement.setString(1, obj.getName());
+            preparedStatement.setString(2, obj.getEmail());
+            preparedStatement.setDate(3, Date.valueOf(obj.getBirthdate()));
+            preparedStatement.setDouble(4, 2000.00);
+            preparedStatement.setInt(5, obj.getDepartment().getId());
 
+            int n = preparedStatement.executeUpdate(); // executa o comando SQL
+            if (n > 0 ){
+                resultSet =  preparedStatement.getGeneratedKeys(); // pegando o id gerado automaticamente
+                 if (resultSet.next()){ // se houver um id gerado
+                    int id = resultSet.getInt(1); // pegando o id gerado
+                    obj.setId(id); // setando o id no obj
+                     return; // saindo do metodo
+                }
+             }
+            throw new DbException("Unexpected error! No rows affected!");
+        }catch (SQLException e){
+            throw new DbException(e.getMessage());
+        }
     }
 
     @Override
@@ -60,8 +86,7 @@ public class SellerDaoJdbc implements SellerDao {
             if (resultSet.next()) { //acessando o primeiro registro do resultSet
                 //caso haja um registro no resultSet (ou seja, se o id existir no banco de dados)
                 Department department = instantiateDepartment(resultSet);
-                Seller seller = instantiateSeller(resultSet, department);
-                return seller;
+                return instantiateSeller(resultSet, department);
 
             }
             return null;
