@@ -38,6 +38,8 @@ public class Main {
         seller.setName("Martha Waine"); //alterando o nome do vendedor
         sellerDao.update(seller); //atualizando o vendedor no banco de dados
 
+        sellerDao.deleteById(1);
+
         DB.closeConnection();
 
 
