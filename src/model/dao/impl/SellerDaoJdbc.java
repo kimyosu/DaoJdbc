@@ -10,7 +10,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SellerDaoJdbc implements SellerDao {
     private Connection connection;
@@ -66,10 +69,9 @@ public class SellerDaoJdbc implements SellerDao {
         } catch (SQLException e) {
             throw new DbException(e.getMessage());
         } finally {
-            DB.closeConnection();
+            // Removido DB.closeConnection(); para não fechar a conexão prematuramente
             DB.closeStatement(preparedStatement);
             DB.closeResultSet(resultSet);
-
         }
     }
 
@@ -111,5 +113,39 @@ public class SellerDaoJdbc implements SellerDao {
     @Override
     public List<Seller> findAll() {
         return List.of();
+    }
+
+    @Override
+    public List<Seller> findByDepartmentId(Department department) {
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            preparedStatement = connection.prepareStatement(
+                    "select seller.*, department.Name as DepName " +
+                            "from seller inner join department " +
+                            "on seller.DepartmentId  = department.id " +
+                            "where DepartmentId = ? " +
+                            "order by Name");
+            preparedStatement.setInt(1, department.getId());
+            resultSet = preparedStatement.executeQuery();
+            List<Seller> sellerList = new ArrayList<>();
+            Map<Integer, Department> map = new HashMap<>();
+            while (resultSet.next()) {
+                Department dep = map.get(resultSet.getInt("DepartmentId"));
+                if (dep == null) {
+                    dep = instantiateDepartment(resultSet);
+                    map.put(resultSet.getInt("DepartmentId"), dep);
+                }
+                Seller seller = instantiateSeller(resultSet, department);
+                sellerList.add(seller);
+            }
+            return sellerList;
+        } catch (SQLException e) {
+            throw new DbException(e.getMessage());
+        } finally {
+            // Removido DB.closeConnection(); para não fechar a conexão prematuramente
+            DB.closeStatement(preparedStatement);
+            DB.closeResultSet(resultSet);
+        }
     }
 }
