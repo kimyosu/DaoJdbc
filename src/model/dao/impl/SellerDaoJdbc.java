@@ -74,7 +74,7 @@ public class SellerDaoJdbc implements SellerDao {
             preparedStatement.setString(1, obj.getName());
             preparedStatement.setString(2, obj.getEmail());
             preparedStatement.setDate(3, Date.valueOf(obj.getBirthdate()));
-            preparedStatement.setDouble(4, 2000.00);
+            preparedStatement.setDouble(4, obj.getBasesalary());
             preparedStatement.setInt(5, obj.getDepartment().getId());
             preparedStatement.setInt(6, obj.getId());
 
