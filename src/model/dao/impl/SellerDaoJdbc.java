@@ -55,7 +55,7 @@ public class SellerDaoJdbc implements SellerDao {
             throw new DbException("Unexpected error! No rows affected!");
         } catch (SQLException e) {
             throw new DbException(e.getMessage());
-        }finally {
+        } finally {
             DB.closeStatement(preparedStatement);
         }
     }
@@ -82,14 +82,29 @@ public class SellerDaoJdbc implements SellerDao {
 
         } catch (SQLException e) {
             throw new DbException(e.getMessage());
-        }finally {
+        } finally {
             DB.closeStatement(preparedStatement);
         }
     }
 
     @Override
     public void deleteById(Integer id) {
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            preparedStatement = connection.prepareStatement(
+                    "delete from seller " +
+                            "where id = ?", // ? são os parametros que serao substituidos pelos valores do obj
+                    PreparedStatement.RETURN_GENERATED_KEYS // para retornar o id gerado automaticamente
+            );
 
+            preparedStatement.setInt(1, id);
+            preparedStatement.executeUpdate(); // executa o comando SQL
+        } catch (SQLException e) {
+            throw new DbException(e.getMessage());
+        } finally {
+            DB.closeStatement(preparedStatement);
+        }
     }
 
     @Override
